@@ -149,5 +149,43 @@ export interface TranscriptionResponse {
   is_final: boolean;
 }
 
+// --- Tools and Computer Operations (Phase 5) ---
+
+export interface ToolMetadata {
+  name: string;
+  description: string;
+  capability: string;
+  requires_confirmation: boolean;
+  parameters_schema: Record<string, any>;
+}
+
+export interface ToolResult {
+  success: boolean;
+  output?: any;
+  error?: string | null;
+  verifiable: boolean;
+  requires_confirmation: boolean;
+  confirmation_prompt?: string | null;
+  metadata: Record<string, any>;
+}
+
+export interface EmergencyStopStatus {
+  is_active: boolean;
+  reason?: string | null;
+  engaged_at?: string | null;
+  interrupted_tasks_count: number;
+}
+
+export interface ToolAuditLog {
+  id: string;
+  event_type: string;
+  component: string;
+  severity: string;
+  message: string;
+  details: Record<string, any>;
+  created_at: string;
+}
+
+
 
 

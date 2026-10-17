@@ -67,7 +67,7 @@ Phase| Description| Status
 2| AI provider routing and conversation| COMPLETED
 3| Persistent memory| COMPLETED
 4| Device diagnostics and voice| COMPLETED
-5| Controlled computer tools| NOT_STARTED
+5| Controlled computer tools| COMPLETED
 6| Notifications and background tasks| NOT_STARTED
 7| Coding and research assistance| NOT_STARTED
 8| Content production and specialized agents| NOT_STARTED

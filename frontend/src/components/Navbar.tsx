@@ -1,10 +1,10 @@
 import React from "react";
-import { Activity, Brain, Cpu, MessageSquare, Radio, Settings as SettingsIcon } from "lucide-react";
+import { Activity, Brain, Cpu, MessageSquare, Radio, Settings as SettingsIcon, Wrench } from "lucide-react";
 import { HealthResponse } from "../types";
 
 interface NavbarProps {
-  activeView: "dashboard" | "chat" | "memory" | "devices" | "settings";
-  setActiveView: (view: "dashboard" | "chat" | "memory" | "devices" | "settings") => void;
+  activeView: "dashboard" | "chat" | "memory" | "devices" | "tools" | "settings";
+  setActiveView: (view: "dashboard" | "chat" | "memory" | "devices" | "tools" | "settings") => void;
   health: HealthResponse | null;
   latencyMs: number | null;
 }
@@ -57,6 +57,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <Radio size={16} />
           <span>Devices</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "tools" ? "active" : ""}`}
+          onClick={() => setActiveView("tools")}
+        >
+          <Wrench size={16} />
+          <span>Tools</span>
         </button>
         <button
           className={`nav-button ${activeView === "settings" ? "active" : ""}`}

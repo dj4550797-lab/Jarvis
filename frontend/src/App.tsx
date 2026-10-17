@@ -4,12 +4,13 @@ import { DashboardView } from "./features/dashboard/DashboardView";
 import { ChatView } from "./features/chat/ChatView";
 import { MemoryView } from "./features/memory/MemoryView";
 import { DeviceDiagnosticsView } from "./features/diagnostics/DeviceDiagnosticsView";
+import { ToolsView } from "./features/tools/ToolsView";
 import { SettingsView } from "./features/settings/SettingsView";
 import { fetchHealth } from "./services/api";
 import { HealthResponse } from "./types";
 
 export const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<"dashboard" | "chat" | "memory" | "devices" | "settings">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "chat" | "memory" | "devices" | "tools" | "settings">("dashboard");
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [loadingHealth, setLoadingHealth] = useState<boolean>(true);
@@ -56,6 +57,7 @@ export const App: React.FC = () => {
         {activeView === "chat" && <ChatView />}
         {activeView === "memory" && <MemoryView />}
         {activeView === "devices" && <DeviceDiagnosticsView />}
+        {activeView === "tools" && <ToolsView />}
         {activeView === "settings" && <SettingsView health={health} />}
       </main>
     </div>

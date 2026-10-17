@@ -306,5 +306,76 @@ export async function synthesizeSpeech(
   return res.blob();
 }
 
+// --- Controlled Computer Tools API (Phase 5) ---
+
+export async function fetchTools(): Promise<import("../types").ToolMetadata[]> {
+  const res = await fetch(`${BASE_URL}/tools`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch tools: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function executeTool(
+  name: string,
+  parameters: Record<string, any> = {}
+): Promise<import("../types").ToolResult> {
+  const res = await fetch(`${BASE_URL}/tools/execute`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, parameters }),
+  });
+
+  if (res.status === 409) {
+    const err = await res.json().catch(() => ({ detail: "Emergency stop active" }));
+    throw new Error(`[Emergency Stop Active] ${err.detail}`);
+  }
+
+  if (res.status === 403) {
+    const err = await res.json().catch(() => ({ detail: "Operation prohibited by security policy" }));
+    throw new Error(`[Security Policy Violation] ${err.detail}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Tool execution request failed: HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+export async function fetchEmergencyStopStatus(): Promise<import("../types").EmergencyStopStatus> {
+  const res = await fetch(`${BASE_URL}/tools/emergency-stop`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch emergency stop status: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function controlEmergencyStop(
+  action: "engage" | "reset",
+  reason?: string,
+  confirmed?: boolean
+): Promise<import("../types").EmergencyStopStatus> {
+  const res = await fetch(`${BASE_URL}/tools/emergency-stop`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, reason, confirmed }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to update emergency stop: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchToolAuditLogs(limit: number = 50): Promise<import("../types").ToolAuditLog[]> {
+  const res = await fetch(`${BASE_URL}/tools/audit?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch tool audit logs: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+
 
 
