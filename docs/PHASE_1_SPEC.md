@@ -1,7 +1,7 @@
 # JARVIS — Phase 1: Minimal Working Desktop Foundation Specification
 
 **Version:** 1.0  
-**Phase:** 1 (IN_PROGRESS)  
+**Phase:** 1 (COMPLETED)  
 **Parent Document:** [PLAN.md](file:///f:/Jarvis/docs/PLAN.md)  
 **Acceptance Testing:** [TESTING.md](file:///f:/Jarvis/docs/TESTING.md)  
 
@@ -48,16 +48,28 @@ Automated test suite: `backend/tests/`
 
 ---
 
-## 4. Frontend Architecture & Implementation Roadmap
+## 4. Frontend Implementation & Verification Status
 
 1. **Design System (`index.css`):**
-   - Palette: Deep cosmic dark slate (`#0b0f19`, `#111827`, `#1f293d`), glowing cyan accent (`#06b6d4`), emerald success (`#10b981`), amber warning (`#f59e0b`).
+   - Palette: Deep cosmic dark slate (`#07090e`, `#0d111a`), glowing cyan accent (`#06b6d4`), emerald success (`#10b981`), amber warning (`#f59e0b`).
    - Glassmorphism: `backdrop-filter: blur(16px)`, translucent subtle borders (`rgba(255, 255, 255, 0.08)`).
-   - Modern typography: Outfit / Inter font hierarchy with high readability.
-2. **Components & Views:**
+   - Typography: Google Fonts Outfit (headings) and Inter (body).
+2. **Components & Views (`frontend/src/`):**
    - `Navbar`: Header with JARVIS brand, pulsing online indicator, backend latency ping, navigation tabs.
    - `DashboardView`: System status overview, live hardware cards (CPU, RAM, OS, Disk), SQLite DB status card, AI Provider status.
    - `ChatView`: Left sidebar of conversations, active message list, honest model indicators, suggested prompt chips.
    - `SettingsView`: Provider selection, data paths, log inspection.
-3. **Frontend Tests:**
-   - Vitest component rendering tests verifying live health display, view switching, and message submission.
+3. **Automated Frontend Tests (`npm test`):**
+   - Vitest component tests in `src/App.test.tsx` passed (2/2 tests passed in 1.42s).
+4. **Production Bundle Build (`npm run build`):**
+   - Strict TypeScript check (`tsc`) passed with 0 errors.
+   - Vite production bundle built successfully (`dist/index.html`, `dist/assets/`).
+
+---
+
+## 5. Live Loopback Verification
+
+- Live HTTP loopback tested against real running uvicorn server (`http://127.0.0.1:8000`).
+- Health endpoint confirmed: `status: "healthy"`, `database: "healthy"`, `journal_mode: "wal"`, `foreign_keys: true`.
+- Real conversation thread created, message stored in SQLite, and retrieved across process restart.
+
