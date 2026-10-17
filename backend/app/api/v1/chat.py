@@ -1,28 +1,39 @@
-"""Chat and Conversation API Endpoints.
+"""Chat, Conversation, and Real-Time Streaming Endpoints.
 
-Implements conversation persistence and honest assistant responses
-in compliance with PLAN.md Phase 1 Acceptance Criteria.
+Implements:
+- Conversation CRUD and persistence in SQLite
+- Provider discovery and model listing
+- Server-Sent Events (SSE) token streaming via /stream
+- Fallback routing and honest status tags per PRD 4.4, 4.5 and PLAN.md Phase 2
 """
 
 from __future__ import annotations
 
+import json
 import uuid
+from collections.abc import AsyncGenerator
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.ai.base import ChatMessage, GenerateOptions, ProviderAvailability
+from app.ai.router import get_ai_router
 from app.config import get_settings
-from app.database import get_db
+from app.database import get_db, get_session_factory
 from app.models.conversation import Conversation, Message
+from app.utils.logging import logger
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 
 class MessageCreate(BaseModel):
     content: str = Field(min_length=1, max_length=10000)
+    provider: str | None = None
+    model: str | None = None
 
 
 class MessageRead(BaseModel):
@@ -38,6 +49,7 @@ class MessageRead(BaseModel):
 
 class ConversationCreate(BaseModel):
     title: str = Field(default="New Conversation", max_length=255)
+    model: str | None = None
 
 
 class ConversationRead(BaseModel):
@@ -50,6 +62,22 @@ class ConversationRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+@router.get("/providers", response_model=list[dict[str, Any]])
+async def list_providers() -> list[dict[str, Any]]:
+    """List all registered AI providers, availability, and discovered models."""
+    ai_router = get_ai_router()
+    statuses = await ai_router.list_provider_statuses()
+    return [
+        {
+            "name": s.provider_name,
+            "available": s.is_available,
+            "models": s.models,
+            "error": s.error_message,
+        }
+        for s in statuses
+    ]
 
 
 @router.get("", response_model=list[ConversationRead])
@@ -69,7 +97,7 @@ def create_conversation(
     conv = Conversation(
         id=str(uuid.uuid4()),
         title=payload.title,
-        model=settings.ai_provider,
+        model=payload.model or settings.ai_provider,
     )
     db.add(conv)
     db.commit()
@@ -93,18 +121,35 @@ def get_conversation(
     return conv
 
 
+@router.delete(
+    "/{conversation_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+)
+def delete_conversation(
+    conversation_id: str,
+    db: Session = Depends(get_db),
+) -> Response:
+    """Delete a conversation thread and all its messages."""
+    stmt = select(Conversation).where(Conversation.id == conversation_id)
+    conv = db.scalars(stmt).first()
+    if not conv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Conversation '{conversation_id}' not found",
+        )
+    db.delete(conv)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.post("/{conversation_id}/messages", response_model=MessageRead, status_code=status.HTTP_201_CREATED)
-def send_message(
+async def send_message(
     conversation_id: str,
     payload: MessageCreate,
     db: Session = Depends(get_db),
 ) -> Message:
-    """Send a user message and receive an honest assistant response.
-    
-    Adheres strictly to Acceptance Criteria: No fake AI response is presented
-    as a real model response.
-    """
-    settings = get_settings()
+    """Send a user message and receive a complete assistant response synchronously."""
     stmt = select(Conversation).where(Conversation.id == conversation_id)
     conv = db.scalars(stmt).first()
     if not conv:
@@ -113,7 +158,7 @@ def send_message(
             detail=f"Conversation '{conversation_id}' not found",
         )
 
-    # 1. Save user message to SQLite
+    # 1. Save user message
     user_msg = Message(
         id=str(uuid.uuid4()),
         conversation_id=conversation_id,
@@ -122,31 +167,37 @@ def send_message(
         model=None,
     )
     db.add(user_msg)
-    db.flush()
+    db.commit()
 
-    # 2. Generate honest assistant response based on provider state
-    if settings.ai_provider == "mock":
-        response_text = (
-            f"[Phase 1 Desktop Foundation — Local Echo Mode]\n"
-            f"Received: \"{payload.content}\"\n\n"
-            f"Status: Database persistence active. Live AI routing will be activated in Phase 2."
-        )
-        model_tag = "jarvis-foundation-mock"
-    elif settings.ai_provider == "ollama" and not settings.local_model_enabled:
-        response_text = (
-            "Local model provider (Ollama) is configured but currently disabled or unavailable. "
-            "Please start Ollama or configure a supported AI model in Settings."
-        )
-        model_tag = "offline"
-    else:
-        response_text = f"Provider '{settings.ai_provider}' is not yet initialized for inference in Phase 1."
-        model_tag = settings.ai_provider
+    # 2. Collect conversation history
+    history_stmt = (
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+    )
+    history_msgs = list(db.scalars(history_stmt).all())
+    chat_context = [ChatMessage(role=m.role, content=m.content) for m in history_msgs]
 
+    # 3. Route through AI Router
+    ai_router = get_ai_router()
+    options = GenerateOptions(model=payload.model)
+    stream_gen, model_tag = await ai_router.stream_with_fallback(
+        chat_context,
+        options=options,
+        provider_name=payload.provider or conv.model,
+    )
+
+    chunks: list[str] = []
+    async for chunk in stream_gen:
+        chunks.append(chunk)
+    full_response = "".join(chunks)
+
+    # 4. Save assistant response
     assistant_msg = Message(
         id=str(uuid.uuid4()),
         conversation_id=conversation_id,
         role="assistant",
-        content=response_text,
+        content=full_response,
         model=model_tag,
     )
     db.add(assistant_msg)
@@ -154,3 +205,91 @@ def send_message(
     db.refresh(assistant_msg)
 
     return assistant_msg
+
+
+@router.post("/{conversation_id}/messages/stream")
+async def stream_message(
+    conversation_id: str,
+    payload: MessageCreate,
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    """Stream response tokens using Server-Sent Events (SSE).
+    
+    Persists user message immediately, streams tokens as they arrive,
+    and commits the complete assistant message upon completion.
+    """
+    stmt = select(Conversation).where(Conversation.id == conversation_id)
+    conv = db.scalars(stmt).first()
+    if not conv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Conversation '{conversation_id}' not found",
+        )
+
+    # 1. Save user message immediately
+    user_msg_id = str(uuid.uuid4())
+    user_msg = Message(
+        id=user_msg_id,
+        conversation_id=conversation_id,
+        role="user",
+        content=payload.content,
+        model=None,
+    )
+    db.add(user_msg)
+    db.commit()
+
+    # 2. Collect conversation history
+    history_stmt = (
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+    )
+    history_msgs = list(db.scalars(history_stmt).all())
+    chat_context = [ChatMessage(role=m.role, content=m.content) for m in history_msgs]
+
+    # 3. Get streaming generator from router
+    ai_router = get_ai_router()
+    options = GenerateOptions(model=payload.model)
+    stream_gen, model_tag = await ai_router.stream_with_fallback(
+        chat_context,
+        options=options,
+        provider_name=payload.provider or conv.model,
+    )
+
+    async def sse_event_generator() -> AsyncGenerator[str, None]:
+        accumulated_text: list[str] = []
+        assistant_msg_id = str(uuid.uuid4())
+
+        # Send initial event with metadata
+        yield f"data: {json.dumps({'event': 'start', 'model': model_tag, 'message_id': assistant_msg_id})}\n\n"
+
+        try:
+            async for token in stream_gen:
+                accumulated_text.append(token)
+                yield f"data: {json.dumps({'event': 'token', 'token': token})}\n\n"
+
+            # Save the accumulated assistant message using the active db session
+            asst_msg = Message(
+                id=assistant_msg_id,
+                conversation_id=conversation_id,
+                role="assistant",
+                content="".join(accumulated_text),
+                model=model_tag,
+            )
+            db.add(asst_msg)
+            db.commit()
+
+            yield f"data: {json.dumps({'event': 'done', 'message_id': assistant_msg_id, 'model': model_tag})}\n\n"
+        except Exception as exc:
+            logger.error("SSE stream interrupted: %s", exc)
+            yield f"data: {json.dumps({'event': 'error', 'error': str(exc)})}\n\n"
+
+    return StreamingResponse(
+        sse_event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

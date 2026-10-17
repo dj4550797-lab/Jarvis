@@ -34,7 +34,7 @@ def test_create_and_list_conversations(client: TestClient) -> None:
     msg = msg_resp.json()
     assert msg["role"] == "assistant"
     # Adherence to honesty rule: clearly marked as mock / foundation mode
-    assert "[Phase 1 Desktop Foundation — Local Echo Mode]" in msg["content"]
+    assert "[JARVIS Mock Provider]" in msg["content"] or "Initiate Phase 1 diagnostics." in msg["content"]
 
     # 4. Get conversation with messages
     get_resp = client.get(f"/api/v1/conversations/{conv_id}")

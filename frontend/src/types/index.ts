@@ -48,3 +48,11 @@ export interface Conversation {
   updated_at: string;
   messages?: Message[];
 }
+
+export interface AIProviderInfo {
+  name: string;
+  available: boolean;
+  models: string[];
+  error?: string | null;
+}
+
