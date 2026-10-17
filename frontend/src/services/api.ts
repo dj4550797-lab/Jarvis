@@ -229,4 +229,82 @@ export async function exportMemories(): Promise<Record<string, unknown>> {
   return res.json();
 }
 
+// --- Devices and Diagnostics API (Phase 4) ---
+
+export async function fetchDevices(): Promise<import("../types").DeviceInventory> {
+  const res = await fetch(`${BASE_URL}/devices`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch devices: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchAudioDevices(): Promise<{ inputs: import("../types").DeviceInfo[]; outputs: import("../types").DeviceInfo[] }> {
+  const res = await fetch(`${BASE_URL}/devices/audio`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch audio devices: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchDisplays(): Promise<import("../types").DisplayInfo[]> {
+  const res = await fetch(`${BASE_URL}/devices/displays`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch displays: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchPermissions(): Promise<import("../types").PermissionStatus[]> {
+  const res = await fetch(`${BASE_URL}/devices/permissions`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch permissions: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// --- Voice Interaction API (Phase 4) ---
+
+export async function fetchVoiceStatus(): Promise<import("../types").VoiceStatusResponse> {
+  const res = await fetch(`${BASE_URL}/voice/status`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch voice status: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function transcribeAudio(
+  audioBase64?: string,
+  hint?: string,
+  engine: string = "mock"
+): Promise<import("../types").TranscriptionResponse> {
+  const res = await fetch(`${BASE_URL}/voice/transcribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ audio_base64: audioBase64, hint, engine }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to transcribe audio: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function synthesizeSpeech(
+  text: string,
+  voice?: string,
+  speed: number = 1.0,
+  engine: string = "mock"
+): Promise<Blob> {
+  const res = await fetch(`${BASE_URL}/voice/synthesize`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, voice, speed, engine }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to synthesize speech: ${res.statusText}`);
+  }
+  return res.blob();
+}
+
+
 

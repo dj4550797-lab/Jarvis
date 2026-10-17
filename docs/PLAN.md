@@ -66,7 +66,7 @@ Phase| Description| Status
 1| Minimal working desktop foundation| COMPLETED
 2| AI provider routing and conversation| COMPLETED
 3| Persistent memory| COMPLETED
-4| Device diagnostics and voice| NOT_STARTED
+4| Device diagnostics and voice| COMPLETED
 5| Controlled computer tools| NOT_STARTED
 6| Notifications and background tasks| NOT_STARTED
 7| Coding and research assistance| NOT_STARTED

@@ -93,4 +93,61 @@ export interface MemoryListResponse {
   items: MemoryItem[];
 }
 
+export interface DeviceInfo {
+  id: string;
+  name: string;
+  kind: "audio_input" | "audio_output" | "camera" | "display";
+  is_default: boolean;
+  channels?: number;
+  sample_rate?: number;
+  manufacturer?: string;
+  status: "available" | "busy" | "unsupported" | "error";
+  extra: Record<string, any>;
+}
+
+export interface DisplayInfo {
+  id: string;
+  name: string;
+  is_primary: boolean;
+  width: number;
+  height: number;
+  scaling_percent: number;
+}
+
+export interface PermissionStatus {
+  capability: "microphone" | "audio_output" | "camera" | "screen_capture";
+  granted: boolean;
+  status: "granted" | "denied" | "prompt" | "unsupported";
+  reason?: string | null;
+}
+
+export interface DeviceInventory {
+  audio_inputs: DeviceInfo[];
+  audio_outputs: DeviceInfo[];
+  cameras: DeviceInfo[];
+  displays: DisplayInfo[];
+  permissions: PermissionStatus[];
+}
+
+export interface VoiceEngineStatus {
+  default_engine: string;
+  available_engines: string[];
+  ready: boolean;
+}
+
+export interface VoiceStatusResponse {
+  stt: VoiceEngineStatus;
+  tts: VoiceEngineStatus;
+}
+
+export interface TranscriptionResponse {
+  text: string;
+  confidence: number;
+  language: string;
+  duration_seconds: number;
+  engine: string;
+  is_final: boolean;
+}
+
+
 

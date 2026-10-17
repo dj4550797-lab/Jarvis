@@ -3,11 +3,15 @@ import {
   Bot,
   Cpu,
   MessageSquare,
+  Mic,
+  MicOff,
   Plus,
   Send,
   Square,
   Terminal,
   Trash2,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { AIProviderInfo, Conversation, Message } from "../../types";
 import {
@@ -17,6 +21,8 @@ import {
   getConversation,
   listConversations,
   streamMessage,
+  synthesizeSpeech,
+  transcribeAudio,
 } from "../../services/api";
 
 export const ChatView: React.FC = () => {
@@ -29,6 +35,12 @@ export const ChatView: React.FC = () => {
   const [providers, setProviders] = useState<AIProviderInfo[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<string>("mock");
   const [selectedModel, setSelectedModel] = useState<string>("");
+
+  // Voice STT & TTS states (Phase 4)
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [activeAudioMsgId, setActiveAudioMsgId] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -231,6 +243,69 @@ export const ChatView: React.FC = () => {
     }
   };
 
+  // Voice Recording & Transcription (STT - Phase 4)
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      setIsRecording(false);
+      try {
+        const result = await transcribeAudio(undefined, undefined, "mock");
+        if (result.text) {
+          setInputText((prev) => (prev ? `${prev} ${result.text}` : result.text));
+        }
+      } catch (err) {
+        console.error("Speech transcription failed:", err);
+      }
+    } else {
+      setIsRecording(true);
+    }
+  };
+
+  const handleCancelRecording = () => {
+    setIsRecording(false);
+  };
+
+  // Text-to-Speech Read Aloud (TTS - Phase 4)
+  const handleReadAloud = async (msgId: string, text: string) => {
+    if (activeAudioMsgId === msgId) {
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.currentTime = 0;
+        setAudioElement(null);
+      }
+      setActiveAudioMsgId(null);
+      return;
+    }
+
+    try {
+      if (audioElement) {
+        audioElement.pause();
+      }
+
+      setActiveAudioMsgId(msgId);
+      const cleanText = text.replace(/\[Stream Error:.*?\]/g, "").trim();
+      const wavBlob = await synthesizeSpeech(cleanText || "Message content is empty", undefined, 1.0, "mock");
+      const audioUrl = URL.createObjectURL(wavBlob);
+      const audio = new Audio(audioUrl);
+      setAudioElement(audio);
+
+      audio.onended = () => {
+        setActiveAudioMsgId(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+      audio.onerror = () => {
+        setActiveAudioMsgId(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      await audio.play().catch(() => {
+        setTimeout(() => setActiveAudioMsgId(null), 1500);
+      });
+    } catch (err) {
+      console.error("Read aloud synthesis failed:", err);
+      setActiveAudioMsgId(null);
+    }
+  };
+
   const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const provName = e.target.value;
     setSelectedProvider(provName);
@@ -380,11 +455,64 @@ export const ChatView: React.FC = () => {
                     <span className="streaming-cursor" />
                   )}
                 </div>
+
+                {/* Read Aloud TTS Button (Phase 4) */}
+                {msg.role === "assistant" && msg.content && (
+                  <button
+                    type="button"
+                    className={`read-aloud-btn ${activeAudioMsgId === msg.id ? "playing" : ""}`}
+                    title={activeAudioMsgId === msg.id ? "Stop playback" : "Read aloud (TTS)"}
+                    onClick={() => handleReadAloud(msg.id, msg.content)}
+                  >
+                    {activeAudioMsgId === msg.id ? (
+                      <>
+                        <VolumeX size={13} />
+                        <span>Stop</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 size={13} />
+                        <span>Read Aloud</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             ))
           )}
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Recording active indicator strip (Phase 4) */}
+        {isRecording && (
+          <div className="recording-indicator-strip">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: "#f43f5e",
+                  display: "inline-block",
+                }}
+              />
+              <span>Recording microphone input... Click Mic to transcribe.</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelRecording}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "#fb7185",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
 
         {/* Input Bar */}
         <form
@@ -402,6 +530,17 @@ export const ChatView: React.FC = () => {
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
           />
+
+          {/* Voice Input Button (Phase 4) */}
+          <button
+            type="button"
+            className={`voice-record-btn ${isRecording ? "recording" : ""}`}
+            title={isRecording ? "Stop recording & transcribe" : "Voice Input (STT)"}
+            onClick={handleToggleRecording}
+          >
+            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
+
           {sending ? (
             <button
               className="stop-btn"
