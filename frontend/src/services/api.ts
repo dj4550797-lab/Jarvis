@@ -138,3 +138,95 @@ export async function streamMessage(
   }
 }
 
+// --- Memory API (Phase 3) ---
+
+export interface MemoryFilterParams {
+  query?: string;
+  memory_type?: string;
+  category?: string;
+  is_uncertain?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export async function listMemories(params?: MemoryFilterParams): Promise<import("../types").MemoryListResponse> {
+  const queryParams = new URLSearchParams();
+  if (params?.query) queryParams.set("query", params.query);
+  if (params?.memory_type) queryParams.set("memory_type", params.memory_type);
+  if (params?.category) queryParams.set("category", params.category);
+  if (params?.is_uncertain !== undefined) queryParams.set("is_uncertain", String(params.is_uncertain));
+  if (params?.limit) queryParams.set("limit", String(params.limit));
+  if (params?.offset) queryParams.set("offset", String(params.offset));
+
+  const url = `${BASE_URL}/memories${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to list memories: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function createMemory(payload: import("../types").MemoryCreateRequest): Promise<import("../types").MemoryItem> {
+  const res = await fetch(`${BASE_URL}/memories`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to create memory: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getMemory(id: string): Promise<import("../types").MemoryItem> {
+  const res = await fetch(`${BASE_URL}/memories/${id}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch memory: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function updateMemory(id: string, payload: import("../types").MemoryUpdateRequest): Promise<import("../types").MemoryItem> {
+  const res = await fetch(`${BASE_URL}/memories/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail || `Failed to update memory: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteMemory(id: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/memories/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`Failed to delete memory: ${res.statusText}`);
+  }
+}
+
+export async function clearAllMemories(): Promise<{ deleted_count: number }> {
+  const res = await fetch(`${BASE_URL}/memories/clear`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ confirm: true }),
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to clear memories: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function exportMemories(): Promise<Record<string, unknown>> {
+  const res = await fetch(`${BASE_URL}/memories/export`);
+  if (!res.ok) {
+    throw new Error(`Failed to export memories: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+

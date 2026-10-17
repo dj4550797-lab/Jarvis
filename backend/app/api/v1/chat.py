@@ -24,6 +24,7 @@ from app.ai.base import ChatMessage, GenerateOptions, ProviderAvailability
 from app.ai.router import get_ai_router
 from app.config import get_settings
 from app.database import get_db, get_session_factory
+from app.memory.service import MemoryService
 from app.models.conversation import Conversation, Message
 from app.utils.logging import logger
 
@@ -178,6 +179,13 @@ async def send_message(
     history_msgs = list(db.scalars(history_stmt).all())
     chat_context = [ChatMessage(role=m.role, content=m.content) for m in history_msgs]
 
+    # Inject persistent memory context if enabled (PRD Section 11)
+    settings = get_settings()
+    if settings.auto_memory_enabled:
+        mem_ctx = MemoryService.get_prompt_context(db, limit=settings.max_active_memories)
+        if mem_ctx:
+            chat_context.insert(0, ChatMessage(role="system", content=mem_ctx))
+
     # 3. Route through AI Router
     ai_router = get_ai_router()
     options = GenerateOptions(model=payload.model)
@@ -246,6 +254,13 @@ async def stream_message(
     )
     history_msgs = list(db.scalars(history_stmt).all())
     chat_context = [ChatMessage(role=m.role, content=m.content) for m in history_msgs]
+
+    # Inject persistent memory context if enabled (PRD Section 11)
+    settings = get_settings()
+    if settings.auto_memory_enabled:
+        mem_ctx = MemoryService.get_prompt_context(db, limit=settings.max_active_memories)
+        if mem_ctx:
+            chat_context.insert(0, ChatMessage(role="system", content=mem_ctx))
 
     # 3. Get streaming generator from router
     ai_router = get_ai_router()

@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Navbar } from "./components/Navbar";
 import { DashboardView } from "./features/dashboard/DashboardView";
 import { ChatView } from "./features/chat/ChatView";
+import { MemoryView } from "./features/memory/MemoryView";
 import { SettingsView } from "./features/settings/SettingsView";
 import { fetchHealth } from "./services/api";
 import { HealthResponse } from "./types";
 
 export const App: React.FC = () => {
-  const [activeView, setActiveView] = useState<"dashboard" | "chat" | "settings">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "chat" | "memory" | "settings">("dashboard");
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [loadingHealth, setLoadingHealth] = useState<boolean>(true);
@@ -52,6 +53,7 @@ export const App: React.FC = () => {
           />
         )}
         {activeView === "chat" && <ChatView />}
+        {activeView === "memory" && <MemoryView />}
         {activeView === "settings" && <SettingsView health={health} />}
       </main>
     </div>

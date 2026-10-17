@@ -1,10 +1,10 @@
 import React from "react";
-import { Activity, Cpu, MessageSquare, Settings as SettingsIcon } from "lucide-react";
+import { Activity, Brain, Cpu, MessageSquare, Settings as SettingsIcon } from "lucide-react";
 import { HealthResponse } from "../types";
 
 interface NavbarProps {
-  activeView: "dashboard" | "chat" | "settings";
-  setActiveView: (view: "dashboard" | "chat" | "settings") => void;
+  activeView: "dashboard" | "chat" | "memory" | "settings";
+  setActiveView: (view: "dashboard" | "chat" | "memory" | "settings") => void;
   health: HealthResponse | null;
   latencyMs: number | null;
 }
@@ -43,6 +43,13 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <MessageSquare size={16} />
           <span>Chat</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "memory" ? "active" : ""}`}
+          onClick={() => setActiveView("memory")}
+        >
+          <Brain size={16} />
+          <span>Memory</span>
         </button>
         <button
           className={`nav-button ${activeView === "settings" ? "active" : ""}`}

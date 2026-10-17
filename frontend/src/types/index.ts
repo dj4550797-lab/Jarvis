@@ -56,3 +56,41 @@ export interface AIProviderInfo {
   error?: string | null;
 }
 
+export interface MemoryItem {
+  id: string;
+  content: string;
+  memory_type: "explicit_fact" | "preference" | "project_context" | "reminder" | "inferred" | string;
+  category?: string | null;
+  is_uncertain: boolean;
+  confidence: number;
+  source: string;
+  tags: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MemoryCreateRequest {
+  content: string;
+  memory_type?: string;
+  category?: string | null;
+  is_uncertain?: boolean;
+  confidence?: number;
+  source?: string;
+  tags?: string[];
+}
+
+export interface MemoryUpdateRequest {
+  content?: string;
+  memory_type?: string;
+  category?: string | null;
+  is_uncertain?: boolean;
+  confidence?: number;
+  tags?: string[];
+}
+
+export interface MemoryListResponse {
+  total: number;
+  items: MemoryItem[];
+}
+
+

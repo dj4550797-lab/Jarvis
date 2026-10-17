@@ -85,6 +85,16 @@ class Settings(BaseSettings):
         description="Enable internal diagnostics and health endpoints",
     )
 
+    # Memory Configuration (Phase 3)
+    auto_memory_enabled: bool = Field(
+        default=True,
+        description="Whether automatic persistent memory retrieval/injection is enabled",
+    )
+    max_active_memories: int = Field(
+        default=15,
+        description="Maximum active memory context items injected into conversation prompt",
+    )
+
     @field_validator("port")
     @classmethod
     def validate_port(cls, v: int) -> int:

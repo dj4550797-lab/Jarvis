@@ -43,6 +43,7 @@ describe("JARVIS Frontend Foundation", () => {
     expect(screen.getByText("JARVIS")).toBeInTheDocument();
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Chat")).toBeInTheDocument();
+    expect(screen.getByText("Memory")).toBeInTheDocument();
     expect(screen.getByText("Settings")).toBeInTheDocument();
   });
 
