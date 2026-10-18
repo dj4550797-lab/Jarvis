@@ -1,4 +1,19 @@
-import { AIProviderInfo, Conversation, HealthResponse, Message } from "../types";
+import {
+  AIProviderInfo,
+  CodeSearchResult,
+  CodeSnapshot,
+  Conversation,
+  DiffResult,
+  HealthResponse,
+  Message,
+  ProjectInspectionResult,
+  ResearchReportExport,
+  ResearchSession,
+  ResearchSource,
+  StackTraceDiagnosticResult,
+  SyntaxValidationResult,
+  TestRunResult,
+} from "../types";
 
 const BASE_URL = "/api/v1";
 
@@ -511,3 +526,262 @@ export async function updateNotificationPreferences(
   }
   return res.json();
 }
+
+// --- Phase 7: Coding API ---
+
+export async function inspectProjectDirectory(
+  directoryPath: string = "f:\\Jarvis",
+  maxFiles: number = 200
+): Promise<ProjectInspectionResult> {
+  const res = await fetch(`${BASE_URL}/coding/inspect`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ directory_path: directoryPath, max_files: maxFiles }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to inspect project: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function searchProjectCode(
+  query: string,
+  directoryPath: string = "f:\\Jarvis",
+  isRegex: boolean = false,
+  caseSensitive: boolean = false,
+  maxResults: number = 50
+): Promise<CodeSearchResult> {
+  const res = await fetch(`${BASE_URL}/coding/search`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      directory_path: directoryPath,
+      query,
+      is_regex: isRegex,
+      case_sensitive: caseSensitive,
+      max_results: maxResults,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to search code: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function validatePythonSyntax(code: string): Promise<SyntaxValidationResult> {
+  const res = await fetch(`${BASE_URL}/coding/validate-syntax`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to validate syntax: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function diagnoseStackTrace(
+  trace: string,
+  workspaceRoot: string = "f:\\Jarvis"
+): Promise<StackTraceDiagnosticResult> {
+  const res = await fetch(`${BASE_URL}/coding/diagnose`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ trace, workspace_root: workspaceRoot }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to diagnose stack trace: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function generateCodeDiff(
+  originalContent: string,
+  newContent: string,
+  filename: string = "file"
+): Promise<DiffResult> {
+  const res = await fetch(`${BASE_URL}/coding/diff`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ original_content: originalContent, new_content: newContent, filename }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to generate diff: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function applyCodePatch(
+  filePath: string,
+  newContent: string,
+  reason: string = "Code modification"
+): Promise<{ status: string; snapshot: CodeSnapshot }> {
+  const res = await fetch(`${BASE_URL}/coding/apply-patch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ file_path: filePath, new_content: newContent, reason }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to apply code patch: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function rollbackCodeSnapshot(snapshotId: string): Promise<{ status: string; file_path: string; restored_at: string }> {
+  const res = await fetch(`${BASE_URL}/coding/rollback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ snapshot_id: snapshotId }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to rollback code: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function listCodeSnapshots(filePath?: string, limit: number = 50): Promise<CodeSnapshot[]> {
+  const params = new URLSearchParams();
+  if (filePath) params.set("file_path", filePath);
+  if (limit) params.set("limit", limit.toString());
+
+  const url = `${BASE_URL}/coding/snapshots${params.toString() ? `?${params.toString()}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to list code snapshots: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function runControlledTest(
+  target: "backend" | "frontend" = "backend",
+  subpath?: string,
+  timeoutSeconds: number = 120
+): Promise<TestRunResult> {
+  const res = await fetch(`${BASE_URL}/coding/run-tests`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target, subpath, timeout_seconds: timeoutSeconds }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to run tests: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// --- Phase 7: Research API ---
+
+export async function listResearchSessions(status?: string, limit: number = 50): Promise<ResearchSession[]> {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (limit) params.set("limit", limit.toString());
+
+  const url = `${BASE_URL}/research/sessions${params.toString() ? `?${params.toString()}` : ""}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to list research sessions: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function createResearchSession(payload: {
+  title: string;
+  topic: string;
+  summary?: string;
+}): Promise<ResearchSession> {
+  const res = await fetch(`${BASE_URL}/research/sessions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to create research session: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getResearchSession(sessionId: string): Promise<ResearchSession> {
+  const res = await fetch(`${BASE_URL}/research/sessions/${sessionId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch research session: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function updateResearchSession(
+  sessionId: string,
+  payload: Partial<{ title: string; topic: string; status: string; summary: string }>
+): Promise<ResearchSession> {
+  const res = await fetch(`${BASE_URL}/research/sessions/${sessionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to update research session: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteResearchSession(sessionId: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/research/sessions/${sessionId}`, {
+    method: "DELETE",
+  });
+  return res.ok;
+}
+
+export async function addResearchSource(
+  sessionId: string,
+  payload: {
+    title: string;
+    snippet: string;
+    url?: string;
+    is_verified?: boolean;
+    confidence?: number;
+    notes?: string;
+  }
+): Promise<ResearchSource> {
+  const res = await fetch(`${BASE_URL}/research/sessions/${sessionId}/sources`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to add research source: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteResearchSource(sourceId: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/research/sources/${sourceId}`, {
+    method: "DELETE",
+  });
+  return res.ok;
+}
+
+export async function exportResearchReport(
+  sessionId: string,
+  format: "markdown" | "json" = "markdown"
+): Promise<ResearchReportExport> {
+  const res = await fetch(`${BASE_URL}/research/sessions/${sessionId}/export`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ format }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to export research report: ${res.statusText}`);
+  }
+  return res.json();
+}
+

@@ -7,6 +7,8 @@ import { MemoryView } from "./features/memory/MemoryView";
 import { DeviceDiagnosticsView } from "./features/diagnostics/DeviceDiagnosticsView";
 import { ToolsView } from "./features/tools/ToolsView";
 import { TasksView } from "./features/tasks/TasksView";
+import { CodingView } from "./features/coding/CodingView";
+import { ResearchView } from "./features/research/ResearchView";
 import { SettingsView } from "./features/settings/SettingsView";
 import {
   deleteNotification,
@@ -147,6 +149,8 @@ export const App: React.FC = () => {
         {activeView === "devices" && <DeviceDiagnosticsView />}
         {activeView === "tools" && <ToolsView />}
         {activeView === "tasks" && <TasksView />}
+        {activeView === "coding" && <CodingView />}
+        {activeView === "research" && <ResearchView />}
         {activeView === "settings" && <SettingsView health={health} />}
       </main>
     </div>

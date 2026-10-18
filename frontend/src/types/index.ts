@@ -249,3 +249,136 @@ export interface NotificationPreference {
   sound_enabled: boolean;
   updated_at?: string | null;
 }
+
+// --- Phase 7: Coding & Research Assistance Types ---
+
+export interface CodeFileItem {
+  name: string;
+  relative_path: string;
+  absolute_path: string;
+  extension: string;
+  size_bytes: number;
+  line_count: number | null;
+  is_text: boolean;
+}
+
+export interface ProjectInspectionResult {
+  root_path: string;
+  directory_count: number;
+  total_files_scanned: number;
+  capped: boolean;
+  files: CodeFileItem[];
+}
+
+export interface CodeSearchMatch {
+  file: string;
+  relative_path: string;
+  absolute_path: string;
+  line_number: number;
+  line_content: string;
+}
+
+export interface CodeSearchResult {
+  root_path: string;
+  query: string;
+  is_regex: boolean;
+  total_matches: number;
+  capped: boolean;
+  matches: CodeSearchMatch[];
+}
+
+export interface SyntaxErrorDetail {
+  line: number | null;
+  column: number | null;
+  message: string;
+  text: string;
+}
+
+export interface SyntaxValidationResult {
+  valid: boolean;
+  errors: SyntaxErrorDetail[];
+  message: string;
+}
+
+export interface StackTraceFrame {
+  file: string;
+  line: number;
+  function: string;
+  code?: string;
+  is_local_project_file?: boolean;
+}
+
+export interface DiagnosticAnalysis {
+  primary_culprit: StackTraceFrame | null;
+  summary: string;
+  suggestions: string[];
+}
+
+export interface StackTraceDiagnosticResult {
+  detected_language: string;
+  error_type: string;
+  error_message: string;
+  total_frames: number;
+  frames: StackTraceFrame[];
+  analysis: DiagnosticAnalysis;
+}
+
+export interface DiffResult {
+  filename: string;
+  diff: string;
+  has_changes: boolean;
+}
+
+export interface CodeSnapshot {
+  id: string;
+  file_path: string;
+  original_content: string;
+  diff_patch: string;
+  reason: string;
+  restored: boolean;
+  created_at: string;
+  restored_at?: string | null;
+}
+
+export interface TestRunResult {
+  target: string;
+  command: string;
+  cwd: string;
+  passed: boolean;
+  exit_code: number;
+  elapsed_ms: number;
+  stdout: string;
+  stderr: string;
+  summary: string;
+}
+
+export interface ResearchSource {
+  id: string;
+  session_id: string;
+  url?: string | null;
+  title: string;
+  snippet: string;
+  is_verified: boolean;
+  confidence: number;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface ResearchSession {
+  id: string;
+  title: string;
+  topic: string;
+  status: "active" | "completed" | "archived" | string;
+  summary?: string | null;
+  created_at: string;
+  updated_at: string;
+  sources?: ResearchSource[];
+}
+
+export interface ResearchReportExport {
+  session_id: string;
+  format: "markdown" | "json";
+  content: string;
+  filename: string;
+}
+

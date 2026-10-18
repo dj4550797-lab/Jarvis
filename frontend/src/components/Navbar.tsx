@@ -1,8 +1,9 @@
-import React from "react";
 import {
   Activity,
   Bell,
+  BookOpen,
   Brain,
+  Code,
   Cpu,
   ListTodo,
   MessageSquare,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import { HealthResponse } from "../types";
 
-export type NavView = "dashboard" | "chat" | "memory" | "devices" | "tools" | "tasks" | "settings";
+export type NavView = "dashboard" | "chat" | "memory" | "devices" | "tools" | "tasks" | "coding" | "research" | "settings";
 
 interface NavbarProps {
   activeView: NavView;
@@ -87,6 +88,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <ListTodo size={16} />
           <span>Tasks</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "coding" ? "active" : ""}`}
+          onClick={() => setActiveView("coding")}
+        >
+          <Code size={16} />
+          <span>Coding</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "research" ? "active" : ""}`}
+          onClick={() => setActiveView("research")}
+        >
+          <BookOpen size={16} />
+          <span>Research</span>
         </button>
         <button
           className={`nav-button ${activeView === "settings" ? "active" : ""}`}

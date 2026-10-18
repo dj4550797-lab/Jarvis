@@ -100,20 +100,41 @@ All implementations follow strict security controls:
   - Frontend vitest tests: 21 / 21 passed.
   - TypeScript compilation: 0 errors (`npx tsc --noEmit`).
 
+### Phase 7: Coding and Research Assistance (Completed & Verified)
+- **Database Architecture & Alembic Migration:**
+  - `code_snapshots` table: file modification audit logs with pre-modification content, unified diffs, reason, and restored state tracking.
+  - `research_sessions` table: research sessions with topics, executive summaries, status (`active`, `completed`, `archived`).
+  - `research_sources` table: traceable evidence sources with title, snippet, URL, `is_verified` flag (Strict Honesty Rule), confidence score, notes.
+  - Alembic migration `4d95fa03c623_phase_7_coding_and_research.py` chained from `3c84ea92b512`.
+- **Coding Engine (`backend/app/coding/`):**
+  - `ProjectInspector`: safe directory scanning within `SandboxGuard` boundaries, file indexing, text line counting, and AST syntax validation (`ast.parse`) with line/col diagnostics. Safe symbol & regex searching across workspace files.
+  - `StackTraceParser`: structured traceback parsing for Python and JavaScript/TypeScript exception traces, linking culprit frames to workspace files and providing targeted suggestions.
+  - `CodePatcher`: unified diff generation (`difflib`), atomic temporary-file writes, pre-modification snapshot creation in SQLite, and one-click rollback engine.
+  - `ControlledTestRunner`: execution of approved test suites (`pytest`, `npm test`) with strict timeouts, non-shell process spawning (`shell=False`), and honest exit code reporting.
+- **Research Service (`backend/app/research/`):**
+  - `ResearchService`: session CRUD, evidence collection with `is_verified` Strict Honesty flags, and report export to Markdown and JSON formats.
+- **REST API Routers (`backend/app/api/v1/`):**
+  - `/api/v1/coding`: `/inspect`, `/search`, `/validate-syntax`, `/diagnose`, `/diff`, `/apply-patch`, `/rollback`, `/snapshots`, `/run-tests`.
+  - `/api/v1/research`: `/sessions`, `/sessions/{id}`, `/sessions/{id}/sources`, `/sources/{id}`, `/sessions/{id}/export`.
+- **Frontend UI (`frontend/src/`):**
+  - `CodingView.tsx`: Tabbed developer workbench (Project Inspector & Symbol Search; AST Syntax Validator & Stack Trace Culprit Analyzer; Unified Diff, Atomic Patch & Snapshot Rollback; Controlled Test Suite Runner).
+  - `ResearchView.tsx`: Research workbench with session manager, Strict Honesty segregation (Verified Facts vs Hypotheses/Uncertain Claims with amber alerts), evidence creation modal with confidence slider, and report export modal with Markdown preview and file download.
+  - `Navbar.tsx` updated with `Coding` and `Research` navigation items.
+  - `App.tsx` wired with `CodingView` and `ResearchView`.
+- **Test Verification:**
+  - Backend pytest tests: 107 / 107 passed (100% pass rate, 0 regressions).
+  - Frontend vitest tests: 33 / 33 passed across 9 test suites.
+  - TypeScript compilation: 0 errors (`npx tsc --noEmit`).
+
 ---
 
-## 3. Next Milestone: Phase 7 — Coding & Research Assistance
+## 3. Next Milestone: Phase 8 — Content Production and Multi-Agent System
 
-Phase 7 will provide controlled coding and evidence-based research assistance:
-1. **Directory Inspection & Source Code Search:**
-   - Deep search of approved project directories.
-   - Code symbol indexing and syntax error diagnosis.
-2. **Stack Trace Diagnosis & Explanation:**
-   - Explain exception traces, call stacks, and root causes without hallucinating.
-3. **Structured Diff Generation:**
-   - Propose focused code changes with unified diff format.
-4. **Approved Test Execution:**
-   - Run approved test commands within project bounds.
-5. **Research Assistant Engine:**
-   - Collect information from permitted sources with genuine traceable citations.
-   - Strictly separate verified facts from uncertain claims.
+Phase 8 will introduce advanced creative production and multi-agent workflows:
+1. **Script & Narrative Generation:**
+   - Script generation, scene breakdowns, structured outlines.
+2. **Visual & Media Integration:**
+   - Visual prompt preparation and verified media assembly.
+3. **Specialized Multi-Agent System:**
+   - Multi-agent collaboration with specialized roles (researcher, coder, reviewer, content creator) and shared task orchestration.
+

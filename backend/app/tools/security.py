@@ -48,6 +48,18 @@ RESERVED_DEVICE_NAMES: set[str] = {
 FORBIDDEN_ARG_CHARS: set[str] = {"&", "|", ";", ">", "<", "`", "$", "\n", "\r"}
 
 
+class _SandboxValidateDescriptor:
+    """Allows validate_path to be invoked either on an instance or directly on the class."""
+
+    def __init__(self, func):
+        self.func = func
+
+    def __get__(self, obj, cls=None):
+        if obj is None:
+            return lambda raw_path, must_exist=False: get_sandbox_guard().validate_path(raw_path, must_exist=must_exist)
+        return lambda raw_path, must_exist=False: self.func(obj, raw_path, must_exist=must_exist)
+
+
 class SandboxGuard:
     """Validates filesystem paths and external operations against security policies."""
 
@@ -63,6 +75,7 @@ class SandboxGuard:
         if resolved not in self._approved_roots:
             self._approved_roots.append(resolved)
 
+    @_SandboxValidateDescriptor
     def validate_path(self, raw_path: str | Path, must_exist: bool = False) -> Path:
         """Canonicalize and validate a path against approved sandbox roots.
 
