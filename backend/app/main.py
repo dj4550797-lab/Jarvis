@@ -10,6 +10,7 @@ Implements FastAPI application with:
 
 from __future__ import annotations
 
+import os
 import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -17,7 +18,8 @@ from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1 import v1_router
 from app.config import get_settings
@@ -105,6 +107,25 @@ def create_app() -> FastAPI:
 
     # Mount API routes
     app.include_router(v1_router)
+
+    # Mount Production UI if built
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    exec_dir = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) else base_dir
+    possible_dist_dirs = [
+        os.path.abspath(os.path.join(base_dir, "..", "..", "frontend", "dist")),
+        os.path.abspath(os.path.join(base_dir, "dist")),
+        os.path.abspath(os.path.join(exec_dir, "dist")),
+    ]
+    ui_dist_dir = next((d for d in possible_dist_dirs if os.path.isdir(d) and os.path.isfile(os.path.join(d, "index.html"))), None)
+
+    if ui_dist_dir:
+        assets_dir = os.path.join(ui_dist_dir, "assets")
+        if os.path.isdir(assets_dir):
+            app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+        @app.get("/app", response_class=FileResponse, tags=["ui"])
+        def serve_ui() -> FileResponse:
+            return FileResponse(os.path.join(ui_dist_dir, "index.html"))
 
     @app.get("/", tags=["root"])
     def root() -> dict[str, Any]:
