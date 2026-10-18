@@ -339,7 +339,7 @@ Acceptance criteria
 
 ---
 
-12. Phase 8 — Content Production and Multi-Agent System
+12. Phase 8 — Content Production and Multi-Agent System [COMPLETED]
 
 Objective
 
@@ -368,12 +368,12 @@ Requirements
 - Track each workflow stage and its output.
 - Obtain required authorization before external actions.
 
-Acceptance criteria
+Acceptance criteria (Verified)
 
-- Every workflow stage has a verifiable output.
-- Failures do not produce false completion reports.
-- External service limitations are documented.
-- Agent permissions cannot be escalated by the agents themselves.
+- Every workflow stage has a verifiable output (tested in `tests/test_content.py` and `tests/test_agents.py`).
+- Failures do not produce false completion reports (runaway loops halt with `failed` and loop notification).
+- External service limitations are documented (explicit disclaimers on automation APIs and publishing guardrails).
+- Agent permissions cannot be escalated by the agents themselves (enforced via immutable frozensets in `specialized.py`).
 
 ---
 

@@ -2,8 +2,10 @@
 
 from fastapi import APIRouter
 
+from app.api.v1.agents import router as agents_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.coding import router as coding_router
+from app.api.v1.content import router as content_router
 from app.api.v1.devices import router as devices_router
 from app.api.v1.health import router as health_router
 from app.api.v1.memory import router as memory_router
@@ -24,6 +26,8 @@ v1_router.include_router(tasks_router)
 v1_router.include_router(notifications_router)
 v1_router.include_router(coding_router)
 v1_router.include_router(research_router)
+v1_router.include_router(content_router)
+v1_router.include_router(agents_router)
 
 __all__ = ["v1_router"]
 

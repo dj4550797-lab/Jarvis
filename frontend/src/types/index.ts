@@ -382,3 +382,91 @@ export interface ResearchReportExport {
   filename: string;
 }
 
+// --- Phase 8: Content Production Interfaces ---
+
+export interface SceneBreakdown {
+  id: string;
+  project_id: string;
+  scene_number: number;
+  title: string;
+  narration_text: string;
+  visual_prompt: string;
+  camera_direction: string;
+  audio_cues: string;
+  duration_seconds: number;
+  asset_status: "pending" | "ready" | "simulated" | string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContentProject {
+  id: string;
+  title: string;
+  topic: string;
+  target_platform: string;
+  target_duration_seconds: number;
+  status: "draft" | "in_progress" | "completed" | "published" | string;
+  synopsis: string;
+  outline: string;
+  raw_script: string;
+  created_at: string;
+  updated_at: string;
+  scenes?: SceneBreakdown[];
+}
+
+export interface ContentExportPackage {
+  project_id: string;
+  title: string;
+  is_valid: boolean;
+  validation_errors: string[];
+  validation_warnings: string[];
+  markdown_brief: string;
+  storyboard: {
+    project_id: string;
+    title: string;
+    platform: string;
+    target_duration_seconds: number;
+    estimated_duration_seconds: number;
+    total_scenes: number;
+    scenes: SceneBreakdown[];
+    export_valid: boolean;
+    validation_errors: string[];
+    validation_warnings: string[];
+  };
+  disclaimer: string;
+}
+
+// --- Phase 8: Multi-Agent System Interfaces ---
+
+export interface AgentCapability {
+  name: string;
+  role: string;
+  system_prompt: string;
+  allowed_tools: string[];
+}
+
+export interface AgentTraceStep {
+  step_index: number;
+  from_agent: string;
+  to_agent: string;
+  intent: string;
+  payload: Record<string, any>;
+  timestamp: string;
+}
+
+export interface AgentWorkflowRun {
+  id: string;
+  goal: string;
+  agent_type: string;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled" | string;
+  current_step: number;
+  max_steps: number;
+  input_payload: Record<string, any>;
+  output_payload?: Record<string, any> | null;
+  trace_log: AgentTraceStep[];
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+

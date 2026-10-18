@@ -2,6 +2,7 @@ import {
   Activity,
   Bell,
   BookOpen,
+  Bot,
   Brain,
   Code,
   Cpu,
@@ -9,11 +10,23 @@ import {
   MessageSquare,
   Radio,
   Settings as SettingsIcon,
+  Video,
   Wrench,
 } from "lucide-react";
 import { HealthResponse } from "../types";
 
-export type NavView = "dashboard" | "chat" | "memory" | "devices" | "tools" | "tasks" | "coding" | "research" | "settings";
+export type NavView =
+  | "dashboard"
+  | "chat"
+  | "memory"
+  | "devices"
+  | "tools"
+  | "tasks"
+  | "coding"
+  | "research"
+  | "content"
+  | "agents"
+  | "settings";
 
 interface NavbarProps {
   activeView: NavView;
@@ -102,6 +115,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         >
           <BookOpen size={16} />
           <span>Research</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "content" ? "active" : ""}`}
+          onClick={() => setActiveView("content")}
+        >
+          <Video size={16} />
+          <span>Content</span>
+        </button>
+        <button
+          className={`nav-button ${activeView === "agents" ? "active" : ""}`}
+          onClick={() => setActiveView("agents")}
+        >
+          <Bot size={16} />
+          <span>Agents</span>
         </button>
         <button
           className={`nav-button ${activeView === "settings" ? "active" : ""}`}

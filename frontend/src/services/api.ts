@@ -1,7 +1,11 @@
 import {
+  AgentCapability,
+  AgentWorkflowRun,
   AIProviderInfo,
   CodeSearchResult,
   CodeSnapshot,
+  ContentExportPackage,
+  ContentProject,
   Conversation,
   DiffResult,
   HealthResponse,
@@ -10,6 +14,7 @@ import {
   ResearchReportExport,
   ResearchSession,
   ResearchSource,
+  SceneBreakdown,
   StackTraceDiagnosticResult,
   SyntaxValidationResult,
   TestRunResult,
@@ -784,4 +789,242 @@ export async function exportResearchReport(
   }
   return res.json();
 }
+
+// ==========================================
+// Phase 8: Content Production API
+// ==========================================
+
+export async function listContentProjects(limit: number = 50): Promise<ContentProject[]> {
+  const res = await fetch(`${BASE_URL}/content/projects?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to list content projects: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getContentProject(projectId: string): Promise<ContentProject> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to get content project: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function createContentProject(payload: {
+  title: string;
+  topic: string;
+  target_platform?: string;
+  target_duration_seconds?: number;
+  synopsis?: string;
+}): Promise<ContentProject> {
+  const res = await fetch(`${BASE_URL}/content/projects`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to create content project: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function updateContentProject(
+  projectId: string,
+  payload: Partial<ContentProject>
+): Promise<ContentProject> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to update content project: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function deleteContentProject(projectId: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}`, {
+    method: "DELETE",
+  });
+  return res.ok;
+}
+
+export async function generateScriptDraft(
+  projectId: string,
+  tone?: string,
+  keyPoints?: string[]
+): Promise<{
+  project_id: string;
+  outline: string;
+  raw_script: string;
+  estimated_words: number;
+  target_words: number;
+  estimated_duration_seconds: number;
+}> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}/generate-script`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tone, key_points: keyPoints }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to generate script draft: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function breakdownScenes(
+  projectId: string,
+  replaceExisting: boolean = true
+): Promise<SceneBreakdown[]> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}/breakdown-scenes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ replace_existing: replaceExisting }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to break down scenes: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function generateVisualPrompts(
+  projectId: string,
+  style?: string,
+  aspectRatio?: string
+): Promise<Array<{
+  scene_id: string;
+  scene_number: number;
+  prompt: string;
+  negative_prompt: string;
+  aspect_ratio: string;
+  camera_direction: string;
+}>> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}/generate-prompts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ style, aspect_ratio: aspectRatio }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to generate visual prompts: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function exportContentPackage(projectId: string): Promise<ContentExportPackage> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}/export`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to export production package: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function publishContentProject(
+  projectId: string,
+  userConfirmed: boolean = false,
+  targetChannel?: string
+): Promise<{
+  project_id: string;
+  status: string;
+  requires_confirmation: boolean;
+  target_channel: string;
+  message: string;
+  can_publish: boolean;
+  verified_url?: string;
+}> {
+  const res = await fetch(`${BASE_URL}/content/projects/${projectId}/publish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user_confirmed: userConfirmed, target_channel: targetChannel }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Publishing request failed: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// ==========================================
+// Phase 8: Multi-Agent System API
+// ==========================================
+
+export async function getAgentCapabilities(): Promise<AgentCapability[]> {
+  const res = await fetch(`${BASE_URL}/agents/capabilities`);
+  if (!res.ok) {
+    throw new Error(`Failed to get agent capabilities: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function startAgentRun(payload: {
+  goal: string;
+  initial_agent?: string;
+  input_payload?: Record<string, any>;
+  max_steps?: number;
+}): Promise<AgentWorkflowRun> {
+  const res = await fetch(`${BASE_URL}/agents/runs`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to start agent run: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function listAgentRuns(limit: number = 50): Promise<AgentWorkflowRun[]> {
+  const res = await fetch(`${BASE_URL}/agents/runs?limit=${limit}`);
+  if (!res.ok) {
+    throw new Error(`Failed to list agent runs: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function getAgentRun(runId: string): Promise<AgentWorkflowRun> {
+  const res = await fetch(`${BASE_URL}/agents/runs/${runId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to get agent run: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function stepAgentRun(
+  runId: string,
+  targetAgent?: string,
+  intent?: string,
+  payload?: Record<string, any>
+): Promise<AgentWorkflowRun> {
+  const res = await fetch(`${BASE_URL}/agents/runs/${runId}/step`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target_agent: targetAgent, intent, payload }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to step agent run: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function cancelAgentRun(runId: string): Promise<AgentWorkflowRun> {
+  const res = await fetch(`${BASE_URL}/agents/runs/${runId}/cancel`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to cancel agent run: ${res.statusText}`);
+  }
+  return res.json();
+}
+
 

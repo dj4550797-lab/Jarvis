@@ -10,6 +10,7 @@ Complies with DATABASE.md:
 from __future__ import annotations
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 
 from sqlalchemy import create_engine, event
@@ -85,6 +86,9 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         session.close()
+
+
+get_db_session = contextmanager(get_db)
 
 
 def verify_database_health() -> dict[str, Any]:
