@@ -376,6 +376,138 @@ export async function fetchToolAuditLogs(limit: number = 50): Promise<import("..
   return res.json();
 }
 
+// ==========================================
+// Phase 6: Background Tasks API
+// ==========================================
 
+export async function fetchTasks(status?: string): Promise<import("../types").BackgroundTask[]> {
+  const url = status ? `${BASE_URL}/tasks?status=${encodeURIComponent(status)}` : `${BASE_URL}/tasks`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch tasks: ${res.statusText}`);
+  }
+  return res.json();
+}
 
+export async function fetchTaskById(taskId: string): Promise<import("../types").BackgroundTask> {
+  const res = await fetch(`${BASE_URL}/tasks/${taskId}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch task ${taskId}: ${res.statusText}`);
+  }
+  return res.json();
+}
 
+export async function enqueueTask(payload: import("../types").TaskEnqueuePayload): Promise<import("../types").BackgroundTask> {
+  const res = await fetch(`${BASE_URL}/tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to enqueue task: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function cancelTask(taskId: string): Promise<{ status: string; task_id: string; cancelled: boolean; message: string }> {
+  const res = await fetch(`${BASE_URL}/tasks/${taskId}/cancel`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to cancel task: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function recoverTasks(): Promise<{ status: string; interrupted_task_count: number; interrupted_task_ids: string[] }> {
+  const res = await fetch(`${BASE_URL}/tasks/recover`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to recover tasks: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+// ==========================================
+// Phase 6: Notifications API
+// ==========================================
+
+export async function fetchNotifications(
+  unreadOnly: boolean = false,
+  category?: string,
+  limit: number = 50
+): Promise<import("../types").NotificationItem[]> {
+  const params = new URLSearchParams();
+  if (unreadOnly) params.set("unread_only", "true");
+  if (category) params.set("category", category);
+  params.set("limit", String(limit));
+
+  const res = await fetch(`${BASE_URL}/notifications?${params.toString()}`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch notifications: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function fetchUnreadNotificationCount(): Promise<number> {
+  const res = await fetch(`${BASE_URL}/notifications/unread-count`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch unread notification count: ${res.statusText}`);
+  }
+  const data = await res.json();
+  return data.unread_count || 0;
+}
+
+export async function markNotificationRead(id: string): Promise<import("../types").NotificationItem> {
+  const res = await fetch(`${BASE_URL}/notifications/${id}/read`, {
+    method: "PATCH",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to mark notification read: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function markAllNotificationsRead(): Promise<number> {
+  const res = await fetch(`${BASE_URL}/notifications/mark-all-read`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to mark all notifications read: ${res.statusText}`);
+  }
+  const data = await res.json();
+  return data.marked_read_count || 0;
+}
+
+export async function deleteNotification(id: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/notifications/${id}`, {
+    method: "DELETE",
+  });
+  return res.ok;
+}
+
+export async function fetchNotificationPreferences(): Promise<import("../types").NotificationPreference> {
+  const res = await fetch(`${BASE_URL}/notifications/preferences`);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch notification preferences: ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export async function updateNotificationPreferences(
+  payload: Partial<import("../types").NotificationPreference>
+): Promise<import("../types").NotificationPreference> {
+  const res = await fetch(`${BASE_URL}/notifications/preferences`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || `Failed to update notification preferences: ${res.statusText}`);
+  }
+  return res.json();
+}

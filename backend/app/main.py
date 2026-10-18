@@ -45,6 +45,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.critical("Fatal: Failed to initialize database: %s", exc, exc_info=True)
         sys.exit(1)
 
+    # 2. Crash/Restart recovery for in-flight background tasks
+    try:
+        from app.tasks.manager import get_task_manager
+        recovered = get_task_manager().recover_interrupted_tasks()
+        if recovered:
+            logger.info("Recovered %d interrupted background tasks on startup: %s", len(recovered), recovered)
+    except Exception as exc:
+        logger.warning("Task recovery check encountered an issue: %s", exc)
+
     yield
 
     # Shutdown logic

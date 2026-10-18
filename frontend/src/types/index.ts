@@ -186,6 +186,66 @@ export interface ToolAuditLog {
   created_at: string;
 }
 
+// --- Notifications and Background Tasks (Phase 6) ---
 
+export type TaskStatusType =
+  | "queued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled"
+  | "interrupted";
 
+export interface BackgroundTask {
+  id: string;
+  name: string;
+  task_type: string;
+  status: TaskStatusType;
+  progress: number;
+  progress_message?: string | null;
+  params: Record<string, any>;
+  result?: any;
+  error?: string | null;
+  timeout_seconds: number;
+  idempotent: boolean;
+  created_at: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
+}
 
+export interface TaskEnqueuePayload {
+  name: string;
+  task_type: string;
+  params?: Record<string, any>;
+  timeout_seconds?: number;
+  idempotent?: boolean;
+}
+
+export type NotificationPriorityType = "low" | "normal" | "high" | "critical";
+
+export interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  priority: NotificationPriorityType;
+  category: "task" | "system" | "security" | "reminder" | "general" | string;
+  read: boolean;
+  delivered: boolean;
+  suppressed_by_dnd: boolean;
+  created_at: string;
+  read_at?: string | null;
+  metadata?: Record<string, any>;
+}
+
+export interface NotificationPreference {
+  id: string;
+  dnd_enabled: boolean;
+  quiet_hours_enabled: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  min_priority_during_quiet: NotificationPriorityType | string;
+  desktop_notifications_enabled: boolean;
+  sound_enabled: boolean;
+  updated_at?: string | null;
+}

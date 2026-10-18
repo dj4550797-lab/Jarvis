@@ -68,7 +68,7 @@ Phase| Description| Status
 3| Persistent memory| COMPLETED
 4| Device diagnostics and voice| COMPLETED
 5| Controlled computer tools| COMPLETED
-6| Notifications and background tasks| NOT_STARTED
+6| Notifications and background tasks| COMPLETED
 7| Coding and research assistance| NOT_STARTED
 8| Content production and specialized agents| NOT_STARTED
 9| Windows installer and release verification| NOT_STARTED

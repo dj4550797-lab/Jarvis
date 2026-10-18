@@ -1,12 +1,26 @@
 import React from "react";
-import { Activity, Brain, Cpu, MessageSquare, Radio, Settings as SettingsIcon, Wrench } from "lucide-react";
+import {
+  Activity,
+  Bell,
+  Brain,
+  Cpu,
+  ListTodo,
+  MessageSquare,
+  Radio,
+  Settings as SettingsIcon,
+  Wrench,
+} from "lucide-react";
 import { HealthResponse } from "../types";
 
+export type NavView = "dashboard" | "chat" | "memory" | "devices" | "tools" | "tasks" | "settings";
+
 interface NavbarProps {
-  activeView: "dashboard" | "chat" | "memory" | "devices" | "tools" | "settings";
-  setActiveView: (view: "dashboard" | "chat" | "memory" | "devices" | "tools" | "settings") => void;
+  activeView: NavView;
+  setActiveView: (view: NavView) => void;
   health: HealthResponse | null;
   latencyMs: number | null;
+  unreadCount?: number;
+  onOpenNotifications?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -14,6 +28,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveView,
   health,
   latencyMs,
+  unreadCount = 0,
+  onOpenNotifications,
 }) => {
   const isHealthy = health?.status === "healthy";
   const isDegraded = health?.status === "degraded";
@@ -66,6 +82,13 @@ export const Navbar: React.FC<NavbarProps> = ({
           <span>Tools</span>
         </button>
         <button
+          className={`nav-button ${activeView === "tasks" ? "active" : ""}`}
+          onClick={() => setActiveView("tasks")}
+        >
+          <ListTodo size={16} />
+          <span>Tasks</span>
+        </button>
+        <button
           className={`nav-button ${activeView === "settings" ? "active" : ""}`}
           onClick={() => setActiveView("settings")}
         >
@@ -74,7 +97,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
       </nav>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+        {/* Notification Bell with Badge */}
+        <button
+          className="nav-notification-btn"
+          onClick={onOpenNotifications}
+          aria-label="View notifications"
+          title="Notifications"
+        >
+          <Bell size={18} />
+          {unreadCount > 0 && (
+            <span className="bell-badge-count">{unreadCount > 99 ? "99+" : unreadCount}</span>
+          )}
+        </button>
+
         {latencyMs !== null && (
           <span style={{ fontSize: "0.78rem", color: "var(--text-faint)", fontFamily: "var(--font-mono)" }}>
             API {latencyMs}ms
