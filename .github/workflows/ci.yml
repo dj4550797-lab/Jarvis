@@ -1,0 +1,74 @@
+name: JARVIS Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  documentation-check:
+    name: Verify Canonical Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required documentation files exist
+        run: |
+          for f in AGENTS.md README.md ARCHITECTURE.md implement_plan.md workflow.md data.md test.md task.md memory.md SECURITY.md PRIVACY.md CHANGELOG.md CONTRIBUTING.md TROUBLESHOOTING.md RELEASE.md API.md; do
+            if [ ! -f "$f" ]; then
+              echo "Missing required documentation file: $f"
+              exit 1
+            fi
+          done
+          echo "All canonical documentation files are present."
+
+  backend-tests:
+    name: Backend Pytest & Typecheck
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: hashFiles('backend/pyproject.toml') != ''
+        run: |
+          cd backend
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run backend tests
+        if: hashFiles('backend/pyproject.toml') != ''
+        run: |
+          cd backend
+          pytest tests/unit -v
+
+  frontend-checks:
+    name: Frontend Typecheck & Vitest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        if: hashFiles('apps/desktop/package.json') != ''
+        run: |
+          cd apps/desktop
+          npm ci
+
+      - name: Type check
+        if: hashFiles('apps/desktop/package.json') != ''
+        run: |
+          cd apps/desktop
+          npm run typecheck
