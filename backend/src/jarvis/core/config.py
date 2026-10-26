@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     JARVIS_TTS_VOICE: str = "en-US-Neural"
     JARVIS_WAKE_WORD: str = "Jarvis"
 
+    @property
+    def JARVIS_MODE(self) -> str:
+        """Operating mode string representation."""
+        return "offline" if self.JARVIS_OFFLINE_MODE else "hybrid"
+
     def ensure_directories(self) -> None:
         """Ensure all required runtime data directories exist."""
         self.JARVIS_DATA_DIR.mkdir(parents=True, exist_ok=True)

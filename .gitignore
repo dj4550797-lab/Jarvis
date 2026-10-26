@@ -101,3 +101,4 @@ logs/
 *.tmp
 temp/
 tmp/
+*.exe
