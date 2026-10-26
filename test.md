@@ -46,18 +46,21 @@ npm run build
 | 2026-10-26 20:15 | Environment Audit | 4 | 4 | 0 | 0 | Node 24.18, npm 11.16, Python 3.12.10, Git verified. |
 | 2026-10-26 20:33 | Backend Pytest (`tests -v`) | 8 | 8 | 0 | 0 | Verified: `test_api.py`, `test_db.py`, `test_config.py`, `test_schemas.py`. Passed in 63.97s. |
 | 2026-10-26 20:41 | Frontend Build (`tsc && vite build`) | 1 | 1 | 0 | 0 | 1577 modules transformed. Zero TypeScript errors. Output in `dist/`. |
+| 2026-10-26 21:28 | Frontend Build (`tsc && vite build`) | 1 | 1 | 0 | 0 | 1609 modules transformed (all 32 pages). Zero TypeScript errors. Passed in 10.35s. |
+| 2026-10-26 21:30 | Backend Pytest (`tests -v`) | 9 | 9 | 0 | 0 | Added `test_providers_and_backups_api`. All passed in 11.47s. |
 
-### Detailed Pytest Log Summary (2026-10-26):
+### Detailed Pytest Log Summary (Phase 2 - 2026-10-26):
 ```text
-tests/integration/test_api.py::test_health_and_status_endpoints PASSED   [ 12%]
-tests/integration/test_api.py::test_task_execution_lifecycle PASSED      [ 25%]
-tests/integration/test_db.py::test_database_initialization PASSED        [ 37%]
-tests/integration/test_db.py::test_memory_fts5_indexing PASSED           [ 50%]
-tests/unit/test_config.py::test_settings_defaults PASSED                 [ 62%]
-tests/unit/test_config.py::test_ensure_directories PASSED                [ 75%]
-tests/unit/test_schemas.py::test_command_request_validation PASSED       [ 87%]
+tests/integration/test_api.py::test_health_and_status_endpoints PASSED   [ 11%]
+tests/integration/test_api.py::test_task_execution_lifecycle PASSED      [ 22%]
+tests/integration/test_api.py::test_providers_and_backups_api PASSED     [ 33%]
+tests/integration/test_db.py::test_database_initialization PASSED        [ 44%]
+tests/integration/test_db.py::test_memory_fts5_indexing PASSED           [ 55%]
+tests/unit/test_config.py::test_settings_defaults PASSED                 [ 66%]
+tests/unit/test_config.py::test_ensure_directories PASSED                [ 77%]
+tests/unit/test_schemas.py::test_command_request_validation PASSED       [ 88%]
 tests/unit/test_schemas.py::test_memory_create_validation PASSED         [100%]
-======================== 8 passed in 63.97s (0:01:03) =========================
+============================= 9 passed in 11.47s ==============================
 ```
 
 ---

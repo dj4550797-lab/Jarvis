@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from jarvis.api import health, memories, tasks, websocket
+from jarvis.api import backups, diagnostics, health, memories, providers, tasks, websocket
 from jarvis.core.config import settings
 from jarvis.core.logging import logger
 from jarvis.database.connection import checkpoint_db, init_db
@@ -65,6 +65,9 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(tasks.router, prefix="/api/v1")
 app.include_router(memories.router, prefix="/api/v1")
+app.include_router(providers.router, prefix="/api/v1")
+app.include_router(diagnostics.router, prefix="/api/v1")
+app.include_router(backups.router, prefix="/api/v1")
 app.include_router(websocket.router)
 
 
