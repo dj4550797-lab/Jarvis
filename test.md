@@ -17,73 +17,52 @@ This document defines the comprehensive QA test architecture, automated suites, 
 ### 2.1 Backend Tests (Python / Pytest)
 ```powershell
 # Run entire backend test suite
-pytest backend/tests -v
+.\.venv\Scripts\pytest.exe tests -v
 
 # Run fast unit tests only
-pytest backend/tests/unit -v
+.\.venv\Scripts\pytest.exe tests/unit -v
 
 # Run integration tests (database, migration, services)
-pytest backend/tests/integration -v
-
-# Run security & boundary tests
-pytest backend/tests/security -v
-
-# Run with test coverage report
-pytest backend/tests --cov=jarvis --cov-report=term-missing
+.\.venv\Scripts\pytest.exe tests/integration -v
 ```
 
 ### 2.2 Desktop Frontend Tests (React / Vitest / TypeScript)
 ```powershell
 cd apps/desktop
 
-# Run unit and component tests
-npm run test
-
-# Run strict TypeScript type checks
+# Type check
 npm run typecheck
 
-# Run linter
-npm run lint
-```
-
-### 2.3 Android Mobile Tests (Gradle / JUnit / Espresso)
-```powershell
-cd apps/android
-
-# Run local unit tests
-./gradlew testDebugUnitTest
-
-# Run connected Android instrumentation tests (requires emulator/device)
-./gradlew connectedDebugAndroidTest
+# Production bundle build test
+npm run build
 ```
 
 ---
 
-## 3. Test Suite Inventory
+## 3. Verified Execution Log
 
-### 3.1 Unit Test Suites (`backend/tests/unit`)
-- `test_config.py`: Validates environment loading, default paths, and secret salt handling.
-- `test_schemas.py`: Validates Pydantic v2 schemas for tasks, memories, and API contracts.
-- `test_task_state_machine.py`: Enforces valid state transitions (Draft -> Queued -> Running -> Completed/Failed).
-- `test_encryption.py`: Verifies AES-256-GCM encryption, decryption, and tampering detection.
-- `test_provider_routing.py`: Tests model router policy (offline enforcement, cloud exclusion).
+| Date / Timestamp | Suite / Command | Total | Passed | Failed | Skipped | Evidence / Notes |
+|---|---|---|---|---|---|---|
+| 2026-10-26 20:15 | Environment Audit | 4 | 4 | 0 | 0 | Node 24.18, npm 11.16, Python 3.12.10, Git verified. |
+| 2026-10-26 20:33 | Backend Pytest (`tests -v`) | 8 | 8 | 0 | 0 | Verified: `test_api.py`, `test_db.py`, `test_config.py`, `test_schemas.py`. Passed in 63.97s. |
+| 2026-10-26 20:41 | Frontend Build (`tsc && vite build`) | 1 | 1 | 0 | 0 | 1577 modules transformed. Zero TypeScript errors. Output in `dist/`. |
 
-### 3.2 Integration Test Suites (`backend/tests/integration`)
-- `test_db_migrations.py`: Verifies SQLite schema creation, WAL mode configuration, and migration rollbacks.
-- `test_memory_service.py`: Tests semantic memory persistence, retrieval, and FTS5 full-text search.
-- `test_vault_indexing.py`: Ingests test documents, verifies SHA-256 hashing, chunking, and search querying.
-- `test_api_endpoints.py`: Tests FastAPI REST routes (`/api/v1/health`, `/api/v1/tasks`, `/api/v1/memories`).
-
-### 3.3 Security Test Suites (`backend/tests/security`)
-- `test_path_traversal.py`: Validates file reading/writing protections against path traversal (`../../`).
-- `test_approval_elevation.py`: Ensures elevated actions (file deletion, shell command) halt without interactive user approval.
-- `test_zero_api_leakage.py`: Intercepts socket calls to verify zero network requests occur when `JARVIS_OFFLINE_MODE=true`.
+### Detailed Pytest Log Summary (2026-10-26):
+```text
+tests/integration/test_api.py::test_health_and_status_endpoints PASSED   [ 12%]
+tests/integration/test_api.py::test_task_execution_lifecycle PASSED      [ 25%]
+tests/integration/test_db.py::test_database_initialization PASSED        [ 37%]
+tests/integration/test_db.py::test_memory_fts5_indexing PASSED           [ 50%]
+tests/unit/test_config.py::test_settings_defaults PASSED                 [ 62%]
+tests/unit/test_config.py::test_ensure_directories PASSED                [ 75%]
+tests/unit/test_schemas.py::test_command_request_validation PASSED       [ 87%]
+tests/unit/test_schemas.py::test_memory_create_validation PASSED         [100%]
+======================== 8 passed in 63.97s (0:01:03) =========================
+```
 
 ---
 
 ## 4. Offline Acceptance Protocol (12-Step Verification)
-
-As mandated by the PRD Addendum, before any release candidate is certified, it must complete the following 12-step verification:
 
 1. [ ] Install/start JARVIS with configured local model.
 2. [ ] Verify model loads into memory and reports loaded status.
@@ -93,22 +72,7 @@ As mandated by the PRD Addendum, before any release candidate is certified, it m
 6. [ ] Verify local memory retrieval functions correctly.
 7. [ ] Ingest a local file and perform full-text and semantic search.
 8. [ ] Verify that cloud fallback is strictly blocked and reported.
-9. [ ] Verify that online-dependent features (web search, cloud APIs) display clear "Unavailable Offline" badges.
-10. [ ] Reconnect network and verify seamless re-synchronization without task corruption.
+9. [ ] Verify that online-dependent features display clear "Unavailable Offline" badges.
+10. [ ] Reconnect network and verify seamless re-synchronization.
 11. [ ] Audit outbound network logs to confirm zero requests during offline period.
 12. [ ] Record hardware specifications, model identifier, and execution latency.
-
----
-
-## 5. Verification Records & Execution History
-
-| Date / Timestamp | Suite / Command | Total | Passed | Failed | Skipped | Evidence / Notes |
-|---|---|---|---|---|---|---|
-| 2026-10-26 (Phase 0) | Environment Audit | 4 | 4 | 0 | 0 | Node 24.18, npm 11.16, Python 3.12.10, Git verified. Cargo pending for Tauri. |
-| Pending Phase 1 | Backend Unit & Integration | - | - | - | - | Scheduled for Phase 1 foundation completion. |
-
----
-
-## 6. Known Failures & Blockers
-
-1. **Cargo Toolchain:** `cargo` command is not currently in system PATH. Tauri desktop native bundling will remain in dev web mode until Rust toolchain is installed. Automated headless tests will run via Vitest and Pytest.

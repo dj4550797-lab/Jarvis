@@ -9,12 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- **Phase 1:** Core scaffolding for Python/FastAPI backend, SQLite persistence, React 19 desktop UI, and Android project skeleton.
-- **Phase 2:** Design token system and 32 functional dashboard pages.
-- **Phase 3:** Provider registry, local GGUF model loader, and offline voice state machine.
-- **Phase 4:** Contextual memory service and Knowledge Vault FTS5 indexer.
-- **Phase 5:** Autonomous task planner and multi-agent execution engine.
+### Added - Phase 1: Foundation & Core Scaffolding
+- **Core Backend Engine (`backend/`):**
+  - Scaffolded Python 3.12 package installed in editable virtual environment.
+  - Implemented Pydantic v2 configuration management with environment loader.
+  - Built structured logging with sensitive token / API key regex redaction.
+  - Developed async `EventBus` pub/sub dispatcher for streaming events.
+  - Implemented SQLite persistence layer with WAL mode (`PRAGMA journal_mode=WAL`), foreign keys, busy timeout, and v1.0.0 schema migrations.
+  - Created FTS5 full-text search virtual tables (`memories_fts`, `document_chunks_fts`).
+  - Built REST API endpoints: `/api/v1/health`, `/api/v1/status`, `/api/v1/tasks`, `/api/v1/memories`.
+  - Built WebSocket gateway: `/ws/events` forwarding real-time system and task events.
+  - Verified backend test suite: 8 passing unit and integration tests via pytest.
+- **Desktop UI Layer (`apps/desktop/`):**
+  - Scaffolded React 18/19, TypeScript (strict), and Vite application.
+  - Implemented dark cyber-glass design token system (`index.css`).
+  - Built 3D particle canvas Hologram visualizer with dynamic audio reactivity.
+  - Created TopNav with live system telemetry (CPU, RAM, SQLite status, mode badge).
+  - Built CommandBar with voice toggle, elevation checkbox, and keyboard execution.
+  - Implemented Page 1 Home Dashboard with real task operations table and cancellation.
+  - Built typed REST and auto-reconnecting WebSocket clients.
+  - Verified production bundle compilation: 1577 modules transformed, zero type errors.
+- **Tauri 2 Shell Container (`apps/desktop/src-tauri/`):**
+  - Configured `tauri.conf.json`, `Cargo.toml`, and `src/main.rs`.
+- **Android Mobile Companion (`apps/android/`):**
+  - Configured Gradle KTS multi-project, `AndroidManifest.xml` permissions, and Jetpack Compose `MainActivity.kt`.
 
 ---
 
