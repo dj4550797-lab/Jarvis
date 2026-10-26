@@ -50,22 +50,25 @@ JARVIS is a private, autonomous personal AI assistant engineered for Windows des
 jarvis/
 ├── AGENTS.md                  # Strict coding agent operational protocol
 ├── README.md                  # Project overview & developer guide
-├── PRD.md                     # Master Product Requirements Document
-├── ARCHITECTURE.md            # Technical architecture & design specifications
-├── implement_plan.md          # Phased roadmap & execution plan
-├── workflow.md                # Development, build, test & recovery workflows
-├── data.md                    # Data schemas, database entities & migrations
-├── test.md                    # Test strategies, suites & verification records
-├── task.md                    # Canonical task tracking register
-├── memory.md                  # Continuity memory & project state for agents
-├── SECURITY.md                # Threat model, credential boundaries & policies
-├── PRIVACY.md                 # Local-first privacy guarantees & data policies
-├── CHANGELOG.md               # Version history and change notes
+├── JARVIS.exe                 # Standalone double-clickable Windows test executable (17.0 MB)
+├── Docs/                      # Canonical documentation suite
+│   ├── PRD.md                 # Master Product Requirements Document
+│   ├── ARCHITECTURE.md        # Technical architecture & design specifications
+│   ├── implement_plan.md      # Phased roadmap & execution plan
+│   ├── memory.md              # Continuity memory & project state for agents
+│   ├── task.md                # Canonical task tracking register
+│   ├── test.md                # Test strategies, suites & verification records
+│   ├── workflow.md            # Development, build, test & recovery workflows
+│   ├── data.md                # Data schemas, database entities & migrations
+│   ├── SECURITY.md            # Threat model, credential boundaries & policies
+│   ├── PRIVACY.md             # Local-first privacy guarantees & data policies
+│   ├── CHANGELOG.md           # Version history and change notes
+│   ├── API.md                 # REST & WebSocket endpoint documentation
+│   └── RELEASE.md             # Packaging and release gates
 ├── apps/
 │   ├── desktop/               # React 19 + TypeScript frontend & Tauri 2 shell
 │   └── android/               # Kotlin + Jetpack Compose mobile application
 ├── backend/                   # Python 3.12 + FastAPI core service layer
-├── scripts/                   # Development, test, build, and recovery automation
 └── .github/                   # GitHub Actions CI/CD workflows
 ```
 
